@@ -1,17 +1,17 @@
-# 📅 Premium Wall Calendar
+# 📅 Wall Calendar
 
 A high-fidelity, interactive wall calendar experience designed with a focus on premium aesthetics, cinematic animations, and physically-accurate page physics.
 
-## ✨ Core Design Philosophy
+##  Core Design Philosophy
 
 The objective was to move beyond a standard digital grid and create something that felt grounded in the physical world.
 
 *   **Cinematic Page Transitions**: Implemented a dual-render engine that treats the calendar like a physical stack of paper. Navigating forwards "reveals" the next month sitting still underneath, while navigating backwards "peels" the current page up to show the previous month.
 *   **Responsive Spiral Binding**: Instead of a static image that stretches, the spiral uses a CSS-repeat pattern that maintains perfect aspect ratio and texture resolution across all screen sizes (Mobile, Tablet, Desktop).
 *   **Monthly Editorial Curation**: Each month features a custom seasonal hero image, a color palette (accent, background, and ranges), and an inspiring quote, creating an evolving visual experience as you navigate the year.
-*   **Ruled-Paper Note System**: Notes aren't just text blocks; they are rendered on a ruled-line grid to maintain the "analog" writing feel.
 
-## 🛠️ Technical Stack
+
+##  Technical Stack
 
 *   **Framework**: [Next.js 15](https://nextjs.org/) (App Router)
 *   **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)

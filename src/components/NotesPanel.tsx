@@ -183,7 +183,7 @@ export default function NotesPanel({
 
                   <button
                     onClick={(e) => { e.stopPropagation(); handleDelete(note.id); }}
-                    className="opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-opacity duration-150 flex-shrink-0 mt-0.5 p-1 -mr-1"
+                    className="opacity-60 lg:opacity-0 lg:group-hover:opacity-60 hover:!opacity-100 transition-opacity duration-150 flex-shrink-0 mt-0.5 p-1 -mr-1"
                     style={{ color: isDark ? '#f87171' : '#d44' }}
                     title="Delete"
                   >
@@ -211,7 +211,8 @@ export default function NotesPanel({
 
       {notes.length > 0 && (
         <p className="mt-2 text-[9px] text-center" style={{ color: isDark ? '#3a3a40' : '#ddd' }}>
-          hover to delete · drag to reorder
+          <span className="lg:hidden">tap to delete · drag to reorder</span>
+          <span className="hidden lg:inline">hover to delete · drag to reorder</span>
         </p>
       )}
     </div>

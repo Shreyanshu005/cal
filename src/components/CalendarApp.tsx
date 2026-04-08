@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   generateCalendarGrid,
   MONTH_NAMES,
@@ -36,6 +36,8 @@ export default function CalendarApp() {
   const [flipPhase, setFlipPhase] = useState<'idle' | 'exit' | 'enter'>('idle');
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [showWeatherModal, setShowWeatherModal] = useState(false);
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
 
   useEffect(() => {
     fetchWeather().then(data => {
@@ -70,16 +72,7 @@ export default function CalendarApp() {
     saveNotes(notes);
   }, [notes]);
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLInputElement) return;
-      if (e.key === 'ArrowLeft') { e.preventDefault(); navigateMonth('prev'); }
-      else if (e.key === 'ArrowRight') { e.preventDefault(); navigateMonth('next'); }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
 
-  }, [currentMonth, currentYear]);
 
   const grid = generateCalendarGrid(currentYear, currentMonth);
   const mk = monthKey(currentYear, currentMonth);
@@ -139,6 +132,48 @@ export default function CalendarApp() {
       setSelectingEnd(false);
     }
   }, [selectingEnd, selectedRange.start]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLInputElement) return;
+      if (e.key === 'ArrowLeft') { 
+        e.preventDefault(); 
+        navigateMonth('prev'); 
+      } else if (e.key === 'ArrowRight') { 
+        e.preventDefault(); 
+        navigateMonth('next'); 
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        setSelectedRange({ start: null, end: null });
+        setSelectingEnd(false);
+      } else if (e.key.toLowerCase() === 't') {
+        e.preventDefault();
+        goToToday();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [navigateMonth, goToToday]);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null || touchStartY.current === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+    const dx = touchStartX.current - touchEndX;
+    const dy = touchStartY.current - touchEndY;
+    const threshold = 50;
+    if (Math.abs(dx) > threshold && Math.abs(dx) > Math.abs(dy)) {
+      if (dx > 0) navigateMonth('next');
+      else navigateMonth('prev');
+    }
+    touchStartX.current = null;
+    touchStartY.current = null;
+  };
 
   const handleAddNote = useCallback((text: string) => {
     const newNote: NoteEntry = {
@@ -243,10 +278,30 @@ export default function CalendarApp() {
       </div>
 
       <div className="max-w-6xl mx-auto mt-8 md:mt-12 px-3 md:px-6 pb-32 md:pb-12 print:p-0 print:m-0 print:max-w-none">
-        <div className="relative">
-          <div className="absolute top-0 left-0 right-0 z-[60] flex justify-center pointer-events-none print:hidden -mt-1" style={{ transform: 'translateY(-50%)' }}>
+        <div className="relative isolate">
+          <div className="absolute top-0 left-0 right-0 z-[60] flex justify-center pointer-events-none print:hidden" style={{ transform: 'translateY(-50%)' }}>
             <SpiralBinding theme={theme} />
           </div>
+
+          {/* Stacking Pages Effect - creates the physical thickness of a wall calendar */}
+          <div className="absolute inset-x-0 top-2 -bottom-3 mx-4 rounded-3xl transition-all duration-500 print:hidden" 
+            style={{ 
+              backgroundColor: cardBg, 
+              zIndex: -1, 
+              opacity: 0.9,
+              boxShadow: isDark ? '0 4px 20px rgba(0,0,0,0.6)' : '0 2px 15px rgba(0,0,0,0.1)',
+              border: `1px solid ${isDark ? '#3a3a40' : '#dcd8d2'}`
+            }} 
+          />
+          <div className="absolute inset-x-0 top-4 -bottom-6 mx-8 rounded-3xl transition-all duration-500 print:hidden" 
+            style={{ 
+              backgroundColor: cardBg, 
+              zIndex: -2, 
+              opacity: 0.6,
+              boxShadow: isDark ? '0 4px 20px rgba(0,0,0,0.6)' : '0 2px 15px rgba(0,0,0,0.1)',
+              border: `1px solid ${isDark ? '#3a3a40' : '#dcd8d2'}`
+            }} 
+          />
 
           <div
             className="relative z-0 rounded-3xl transition-all duration-500 -mt-1 print:rounded-none print:mt-0 print:border-none"
@@ -257,7 +312,11 @@ export default function CalendarApp() {
                 : '0 4px 30px rgba(0,0,0,0.08)',
             }}
           >
-            <div className="calendar-perspective relative z-0 bg-transparent">
+            <div 
+              className="calendar-perspective relative z-0 bg-transparent"
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+            >
               {/* TARGET LAYER (UNDERNEATH STATIC, OR ANIMATING DOWN ON TOP) */}
               {flipPhase === 'exit' && (
                 <div 
