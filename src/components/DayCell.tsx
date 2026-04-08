@@ -47,7 +47,9 @@ export default function DayCell({
     return (
       <div className="relative flex items-center justify-center py-2.5 md:py-3"
         style={{ color: isDark ? '#3a3a40' : '#d4d0ca', fontFamily: 'var(--font-display), sans-serif' }}>
-        <span className="text-sm md:text-base">{date}</span>
+        <div className="relative w-8 h-8 md:w-9 md:h-9 flex items-center justify-center">
+          <span className="text-sm md:text-base">{date}</span>
+        </div>
       </div>
     );
   }

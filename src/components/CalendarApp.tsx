@@ -168,6 +168,39 @@ export default function CalendarApp() {
 
   const isCurrentMonth = today.getMonth() === currentMonth && today.getFullYear() === currentYear;
 
+  // Derive target configuration for dual-rendering background page underneath during flip anims
+  const tMonth = flipDirection === 'next' ? (currentMonth + 1) % 12 : (flipDirection === 'prev' ? (currentMonth - 1 + 12) % 12 : currentMonth);
+  const tYear = currentMonth === 11 && flipDirection === 'next' ? currentYear + 1 : (currentMonth === 0 && flipDirection === 'prev' ? currentYear - 1 : currentYear);
+  const tGrid = generateCalendarGrid(tYear, tMonth);
+  const tMk = `${tYear}-${tMonth}`;
+  const tNotes = notes[tMk] || [];
+  const tTheme = MONTH_THEMES[tMonth];
+  const tQuote = MONTH_QUOTES[tMonth];
+  const tAccent = isDark && tTheme.darkAccent ? tTheme.darkAccent : tTheme.accent;
+
+  const renderMonthPage = (m: number, y: number, g: any[], nData: any[], mTheme: any, mQuote: any, mAccent: string) => (
+    <>
+      <HeroPanel month={m} year={y} imageSrc={MONTH_IMAGES[m]} theme={theme} />
+      <div className="px-5 py-3 md:px-8 md:py-4 border-b transition-colors duration-500" style={{ borderColor: isDark ? '#3a3a40' : `${mAccent}20` }}>
+        <p className="text-xs md:text-sm italic leading-relaxed" style={{ color: isDark ? '#8a8a90' : '#8a8a8a' }}>
+          &ldquo;{mQuote.text}&rdquo;
+        </p>
+        <p className="text-[10px] md:text-xs mt-1 font-medium" style={{ color: mAccent }}>
+          — {mQuote.author}
+        </p>
+      </div>
+      <NavigationControls month={m} year={y} onPrev={() => navigateMonth('prev')} onNext={() => navigateMonth('next')} onToday={goToToday} theme={theme} accentColor={mAccent} />
+      <div className="flex flex-col lg:flex-row">
+        <div className="order-2 lg:order-1 lg:w-[280px] xl:w-[320px] flex-shrink-0">
+          <NotesPanel notes={nData} selectedRange={selectedRange} onAddNote={handleAddNote} onDeleteNote={handleDeleteNote} onReorderNotes={handleReorderNotes} theme={theme} accentColor={mAccent} />
+        </div>
+        <div className="order-1 lg:order-2 flex-1 min-w-0">
+          <DateGrid grid={g} selectedRange={selectedRange} selectingEnd={selectingEnd} onDateClick={handleDateClick} theme={theme} monthTheme={mTheme} todayWeather={weatherData?.today} />
+        </div>
+      </div>
+    </>
+  );
+
   return (
     <div
       className="min-h-screen transition-colors duration-500"
@@ -178,13 +211,7 @@ export default function CalendarApp() {
     >
       <div className="flex items-center justify-between px-4 py-3 md:px-8 md:py-4">
         <div className="flex items-center gap-4">
-          <h1
-            className="font-display text-lg md:text-xl font-semibold tracking-tight cursor-pointer opacity-70 hover:opacity-100 transition-opacity"
-            onClick={goToToday}
-            title="Jump to today"
-          >
-            Wall Calendar
-          </h1>
+          {/* Header text purposefully removed at user request */}
         </div>
         <div className="flex items-center gap-3 print:hidden">
           <button
@@ -215,14 +242,14 @@ export default function CalendarApp() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto mt-8 md:mt-12 px-3 md:px-6 pb-8 print:p-0 print:m-0 print:max-w-none">
+      <div className="max-w-6xl mx-auto mt-8 md:mt-12 px-3 md:px-6 pb-32 md:pb-12 print:p-0 print:m-0 print:max-w-none">
         <div className="relative">
           <div className="absolute top-0 left-0 right-0 z-[60] flex justify-center pointer-events-none print:hidden -mt-1" style={{ transform: 'translateY(-50%)' }}>
             <SpiralBinding theme={theme} />
           </div>
 
           <div
-            className="relative z-0 rounded-3xl overflow-hidden transition-all duration-500 -mt-1 print:rounded-none print:mt-0 print:border-none"
+            className="relative z-0 rounded-3xl transition-all duration-500 -mt-1 print:rounded-none print:mt-0 print:border-none"
             style={{
               backgroundColor: cardBg,
               boxShadow: isDark
@@ -230,74 +257,27 @@ export default function CalendarApp() {
                 : '0 4px 30px rgba(0,0,0,0.08)',
             }}
           >
-            <div className="calendar-perspective">
-              <div
-                className={`${flipPhase === 'exit'
-                  ? flipDirection === 'next' ? 'flip-exit-next' : 'flip-exit-prev'
-                  : flipPhase === 'enter'
-                    ? flipDirection === 'next' ? 'flip-enter-next' : 'flip-enter-prev'
-                    : 'flip-idle'
+            <div className="calendar-perspective relative z-0 bg-transparent">
+              {/* TARGET LAYER (UNDERNEATH STATIC, OR ANIMATING DOWN ON TOP) */}
+              {flipPhase === 'exit' && (
+                <div 
+                  className={`absolute inset-0 pointer-events-none rounded-3xl overflow-hidden ${
+                    flipDirection === 'next' ? 'z-20 anim-flip-down' : 'z-0'
                   }`}
-              >
-                <HeroPanel
-                  month={currentMonth}
-                  year={currentYear}
-                  imageSrc={MONTH_IMAGES[currentMonth]}
-                  theme={theme}
-                />
-
-                <div
-                  className="px-5 py-3 md:px-8 md:py-4 border-b transition-colors duration-500"
-                  style={{ borderColor: isDark ? '#3a3a40' : `${accentColor}20` }}
+                  style={{ backgroundColor: cardBg }}
                 >
-                  <p
-                    className="text-xs md:text-sm italic leading-relaxed"
-                    style={{ color: isDark ? '#8a8a90' : '#8a8a8a' }}
-                  >
-                    &ldquo;{monthQuote.text}&rdquo;
-                  </p>
-                  <p
-                    className="text-[10px] md:text-xs mt-1 font-medium"
-                    style={{ color: accentColor }}
-                  >
-                    — {monthQuote.author}
-                  </p>
+                  {renderMonthPage(tMonth, tYear, tGrid, tNotes, tTheme, tQuote, tAccent)}
                 </div>
+              )}
 
-                <NavigationControls
-                  month={currentMonth}
-                  year={currentYear}
-                  onPrev={() => navigateMonth('prev')}
-                  onNext={() => navigateMonth('next')}
-                  onToday={goToToday}
-                  theme={theme}
-                  accentColor={accentColor}
-                />
-
-                <div className="flex flex-col lg:flex-row">
-                  <div className="order-2 lg:order-1 lg:w-[280px] xl:w-[320px] flex-shrink-0">
-                    <NotesPanel
-                      notes={currentNotes}
-                      selectedRange={selectedRange}
-                      onAddNote={handleAddNote}
-                      onDeleteNote={handleDeleteNote}
-                      onReorderNotes={handleReorderNotes}
-                      theme={theme}
-                      accentColor={accentColor}
-                    />
-                  </div>
-                  <div className="order-1 lg:order-2 flex-1 min-w-0">
-                    <DateGrid
-                      grid={grid}
-                      selectedRange={selectedRange}
-                      selectingEnd={selectingEnd}
-                      onDateClick={handleDateClick}
-                      theme={theme}
-                      monthTheme={monthTheme}
-                      todayWeather={weatherData?.today}
-                    />
-                  </div>
-                </div>
+              {/* CURRENT LAYER (STATIC ON BOTTOM, OR ANIMATING UP ON TOP) */}
+              <div
+                className={`transform-style-preserve-3d relative rounded-3xl overflow-hidden ${
+                  flipPhase === 'exit' && flipDirection === 'prev' ? 'z-10 anim-flip-up' : 'z-10'
+                }`}
+                style={{ backgroundColor: cardBg }}
+              >
+                {renderMonthPage(currentMonth, currentYear, grid, currentNotes, monthTheme, monthQuote, accentColor)}
               </div>
             </div>
           </div>
@@ -313,7 +293,7 @@ export default function CalendarApp() {
 
         {rangeDays !== null && selectedRange.start && selectedRange.end && (
           <div
-            className="range-toast fixed bottom-6 left-1/2 z-50 px-5 py-3 rounded-2xl text-sm font-medium backdrop-blur-md shadow-lg flex items-center gap-3"
+            className="range-toast fixed bottom-4 md:bottom-6 left-1/2 z-50 px-3 md:px-5 py-2 md:py-3 rounded-full md:rounded-2xl text-[10px] sm:text-xs md:text-sm font-medium backdrop-blur-md shadow-lg flex items-center gap-1.5 md:gap-3 whitespace-nowrap transition-all duration-300 w-max justify-center"
             style={{
               backgroundColor: isDark ? 'rgba(36,36,40,0.9)' : 'rgba(255,255,255,0.9)',
               color: isDark ? '#e8e4df' : '#2d2d2d',
@@ -351,26 +331,24 @@ export default function CalendarApp() {
 }
 
 function SpiralBinding({ theme }: { theme: 'light' | 'dark' }) {
+  const spiralStyle = {
+    backgroundImage: 'url(/Binding-Material-Horizontal.png)',
+    backgroundRepeat: 'no-repeat',
+    backgroundPosition: 'center',
+    backgroundSize: 'contain',
+    opacity: theme === 'dark' ? 0.9 : 1
+  };
+
   return (
-    <div className="flex w-[95%] md:w-full max-w-[850px] justify-center mx-auto overflow-hidden md:-space-x-12">
-      <img
-        src="/Binding-Material-Horizontal.png"
-        alt="Spiral Binding Left"
-        className="block min-w-0 w-full md:w-[52%] max-w-none md:max-w-[350px] h-[210px] sm:h-[120px] md:h-[294px]"
-        style={{
-          objectFit: 'fill',
-          opacity: theme === 'dark' ? 0.9 : 1
-        }}
-      />
-      <img
-        src="/Binding-Material-Horizontal.png"
-        alt="Spiral Binding Right"
-        className="hidden md:block min-w-0 w-[52%] max-w-[350px] h-[294px]"
-        style={{
-          objectFit: 'fill',
-          opacity: theme === 'dark' ? 0.9 : 1
-        }}
-      />
+    <div className="w-full max-w-[850px] mx-auto flex justify-between px-6 sm:px-12 md:px-8 h-[90px] sm:h-[130px] md:h-[220px]">
+      {/* 1st Spiral: Always visible */}
+      <div className="w-[40%] sm:w-[30%] h-full" style={spiralStyle} />
+      
+      {/* 2nd Spiral: Desktop only (Center) */}
+      <div className="w-[30%] h-full hidden md:block" style={spiralStyle} />
+      
+      {/* 3rd Spiral: Always visible (Right) */}
+      <div className="w-[40%] sm:w-[30%] h-full" style={spiralStyle} />
     </div>
   );
 }

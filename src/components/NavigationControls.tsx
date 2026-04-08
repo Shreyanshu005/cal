@@ -27,7 +27,7 @@ export default function NavigationControls({
 
   return (
     <div
-      className="flex items-center justify-between px-4 py-3 md:px-6 md:py-4 border-b"
+      className="flex items-center justify-between px-5 py-3 md:px-8 md:py-4 border-b"
       style={{ borderColor: isDark ? '#3a3a40' : '#e8e4df' }}
     >
       
@@ -50,8 +50,8 @@ export default function NavigationControls({
           </svg>
         </button>
 
-        <div className="min-w-[180px] text-center">
-          <h2 className="font-display text-xl md:text-2xl font-bold tracking-tight">
+        <div className="min-w-[140px] md:min-w-[180px] text-center">
+          <h2 className="font-display text-lg md:text-2xl font-bold tracking-tight">
             {MONTH_NAMES[month]}{' '}
             <span style={{ color: isDark ? '#8a8a90' : '#8a8a8a' }}>
               {year}

@@ -16,7 +16,7 @@ const clashDisplay = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Wall Calendar — Interactive Date Range Picker",
+  title: "Wall Calendar",
   description:
     "A beautiful, interactive wall calendar component with date range selection, integrated notes, and seasonal hero imagery. Built with Next.js and Tailwind CSS.",
 };

@@ -19,10 +19,9 @@ export default function HeroPanel({ month, year, imageSrc, theme }: HeroPanelPro
         src={imageSrc}
         alt={`${MONTH_NAMES[month]} ${year} landscape`}
         fill
-        className="object-cover img-fade-in"
+        className="object-cover"
         priority
         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1152px"
-        key={`${month}-${year}`}
       />
 
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
