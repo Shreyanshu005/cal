@@ -52,5 +52,4 @@ npm start
 - `/src/app`: Next.js App Router setup and global styles.
 - `/public`: High-resolution seasonal assets and fonts.
 
----
-Built by Antigravity 🛸
+
