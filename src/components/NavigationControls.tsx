@@ -10,6 +10,7 @@ interface NavigationControlsProps {
   onToday: () => void;
   theme: 'light' | 'dark';
   accentColor: string;
+  today: Date;
 }
 
 export default function NavigationControls({
@@ -20,8 +21,8 @@ export default function NavigationControls({
   onToday,
   theme,
   accentColor,
+  today,
 }: NavigationControlsProps) {
-  const today = new Date();
   const isCurrentMonth = today.getMonth() === month && today.getFullYear() === year;
   const isDark = theme === 'dark';
 

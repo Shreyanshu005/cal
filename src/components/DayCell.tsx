@@ -15,6 +15,7 @@ interface DayCellProps {
   onClick: () => void;
   theme: 'light' | 'dark';
   monthTheme: MonthTheme;
+  today: Date;
   todayWeather?: WeatherForecastDay;
 }
 
@@ -28,12 +29,13 @@ export default function DayCell({
   onClick,
   theme,
   monthTheme,
+  today,
   todayWeather,
 }: DayCellProps) {
   const { date, month, year, isCurrentMonth, isToday, isSaturday, isSunday } = dayInfo;
   const isDark = theme === 'dark';
 
-  const todayDate = new Date();
+  const todayDate = new Date(today);
   todayDate.setHours(0, 0, 0, 0);
   const cellDate = new Date(year, month, date);
   const daysUntil = Math.ceil((cellDate.getTime() - todayDate.getTime()) / (1000 * 3600 * 24));
@@ -76,8 +78,6 @@ export default function DayCell({
 
   let todayClass = '';
   if (isToday && !isRangeStart && !isRangeEnd) {
-    const ringColor = isDark ? monthTheme.darkAccent : monthTheme.todayRing;
-    cellStyle.boxShadow = `0 0 0 2px ${ringColor}, 0 0 0 3px ${isDark ? '#242428' : '#ffffff'}`;
     todayClass = 'rounded-xl';
   }
 
@@ -126,6 +126,12 @@ export default function DayCell({
         )}
         <span className="relative z-10 text-sm md:text-base flex items-center gap-1" style={{ fontFamily: 'var(--font-display), sans-serif' }}>
           {date}
+          {isToday && (
+            <div 
+              className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-0.5 rounded-full"
+              style={{ backgroundColor: isDark ? monthTheme.darkAccent : monthTheme.todayRing }}
+            />
+          )}
           {todayWeather && (
             <span className="text-[10px] sm:text-xs ml-0.5 mt-px filter drop-shadow-sm animation-fade-in" title={`${todayWeather.maxTemp}° / ${todayWeather.minTemp}°`}>
               {todayWeather.icon}

@@ -13,10 +13,11 @@ interface DateGridProps {
   onDateClick: (date: Date) => void;
   theme: 'light' | 'dark';
   monthTheme: MonthTheme;
+  today: Date;
   todayWeather?: WeatherForecastDay;
 }
 
-export default function DateGrid({ grid, selectedRange, selectingEnd, onDateClick, theme, monthTheme, todayWeather }: DateGridProps) {
+export default function DateGrid({ grid, selectedRange, selectingEnd, onDateClick, theme, monthTheme, today, todayWeather }: DateGridProps) {
   const { start, end } = selectedRange;
 
   return (
@@ -65,6 +66,7 @@ export default function DateGrid({ grid, selectedRange, selectingEnd, onDateClic
               onClick={() => dayInfo.isCurrentMonth && onDateClick(dayInfo.dateObj)}
               theme={theme}
               monthTheme={monthTheme}
+              today={today}
               todayWeather={dayInfo.isToday ? todayWeather : undefined}
             />
           );

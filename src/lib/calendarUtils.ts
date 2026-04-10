@@ -49,8 +49,7 @@ export const MONTH_IMAGES: Record<number, string> = {
   11: '/december.png',
 };
 
-export function generateCalendarGrid(year: number, month: number): DayInfo[] {
-  const today = new Date();
+export function generateCalendarGrid(year: number, month: number, today: Date): DayInfo[] {
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
 

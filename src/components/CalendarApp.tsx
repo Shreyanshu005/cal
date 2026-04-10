@@ -25,7 +25,7 @@ import ThemeSwitcher from './ThemeSwitcher';
 import WeatherForecast from './WeatherForecast';
 
 export default function CalendarApp() {
-  const today = new Date();
+  const [today, setToday] = useState(new Date());
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [selectedRange, setSelectedRange] = useState<DateRange>({ start: null, end: null });
@@ -43,6 +43,13 @@ export default function CalendarApp() {
     fetchWeather().then(data => {
       if (data) setWeatherData(data);
     });
+
+    // Update today's date every minute to ensure calendar highlight stays current
+    const timer = setInterval(() => {
+      setToday(new Date());
+    }, 60000);
+
+    return () => clearInterval(timer);
   }, []);
 
   const monthTheme = useMemo(() => MONTH_THEMES[currentMonth], [currentMonth]);
@@ -74,7 +81,7 @@ export default function CalendarApp() {
 
 
 
-  const grid = generateCalendarGrid(currentYear, currentMonth);
+  const grid = generateCalendarGrid(currentYear, currentMonth, today);
   const mk = monthKey(currentYear, currentMonth);
   const currentNotes = notes[mk] || [];
 
@@ -99,6 +106,7 @@ export default function CalendarApp() {
 
   const goToToday = useCallback(() => {
     const t = new Date();
+    setToday(t); // Also ensure the app-wide today is refreshed
     if (t.getMonth() === currentMonth && t.getFullYear() === currentYear) return;
     if (flipPhase !== 'idle') return;
     const dir = t > new Date(currentYear, currentMonth) ? 'next' : 'prev';
@@ -206,7 +214,7 @@ export default function CalendarApp() {
   // Derive target configuration for dual-rendering background page underneath during flip anims
   const tMonth = flipDirection === 'next' ? (currentMonth + 1) % 12 : (flipDirection === 'prev' ? (currentMonth - 1 + 12) % 12 : currentMonth);
   const tYear = currentMonth === 11 && flipDirection === 'next' ? currentYear + 1 : (currentMonth === 0 && flipDirection === 'prev' ? currentYear - 1 : currentYear);
-  const tGrid = generateCalendarGrid(tYear, tMonth);
+  const tGrid = generateCalendarGrid(tYear, tMonth, today);
   const tMk = `${tYear}-${tMonth}`;
   const tNotes = notes[tMk] || [];
   const tTheme = MONTH_THEMES[tMonth];
@@ -224,13 +232,13 @@ export default function CalendarApp() {
           — {mQuote.author}
         </p>
       </div>
-      <NavigationControls month={m} year={y} onPrev={() => navigateMonth('prev')} onNext={() => navigateMonth('next')} onToday={goToToday} theme={theme} accentColor={mAccent} />
+      <NavigationControls month={m} year={y} onPrev={() => navigateMonth('prev')} onNext={() => navigateMonth('next')} onToday={goToToday} theme={theme} accentColor={mAccent} today={today} />
       <div className="flex flex-col lg:flex-row">
         <div className="order-2 lg:order-1 lg:w-[280px] xl:w-[320px] flex-shrink-0">
           <NotesPanel notes={nData} selectedRange={selectedRange} onAddNote={handleAddNote} onDeleteNote={handleDeleteNote} onReorderNotes={handleReorderNotes} theme={theme} accentColor={mAccent} />
         </div>
         <div className="order-1 lg:order-2 flex-1 min-w-0">
-          <DateGrid grid={g} selectedRange={selectedRange} selectingEnd={selectingEnd} onDateClick={handleDateClick} theme={theme} monthTheme={mTheme} todayWeather={weatherData?.today} />
+          <DateGrid grid={g} selectedRange={selectedRange} selectingEnd={selectingEnd} onDateClick={handleDateClick} theme={theme} monthTheme={mTheme} today={today} todayWeather={weatherData?.today} />
         </div>
       </div>
     </>
